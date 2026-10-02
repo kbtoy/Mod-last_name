@@ -50,7 +50,7 @@ force a rename on anyone with a family name.
 
    ```bash
    cd modules
-   git clone https://github.com/kbt0y5/mod-last_name.git
+   git clone https://github.com/kbtoy/mod-last_name.git
    ```
 
 2. Copy `conf/mod_last_name.conf.dist` to your worldserver config folder as `mod_last_name.conf`.
