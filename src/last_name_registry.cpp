@@ -9,6 +9,7 @@
 // name and returns the player to the character screen so every client picks up the new name.
 
 #include "LastName.h"
+#include "AccountMgr.h"
 #include "CharacterCache.h"
 #include "Chat.h"
 #include "DatabaseEnv.h"
@@ -21,9 +22,11 @@
 #include "ObjectMgr.h"
 #include "Player.h"
 #include "PlayerScript.h"
+#include "Realm.h"
 #include "ScriptMgr.h"
 #include "ScriptedGossip.h"
 #include "StringFormat.h"
+#include "World.h"
 #include "WorldPacket.h"
 #include "WorldScript.h"
 #include "WorldSession.h"
@@ -227,6 +230,13 @@ namespace
         uint32 const delay = sLastNameConfig->GetLogoutDelay();
         handler.PSendSysMessage("The Keeper of Records inscribes {} into the ledger. You will return to the character "
             "screen in {} seconds to take up your new name.", fullName, delay);
+
+        // The client keeps per-character addon settings in a folder named after the character, which only the
+        // player can move. (Account-wide AceDB settings are moved by the client patch, LastName.lua.)
+        std::string account;
+        if (AccountMgr::GetName(player->GetSession()->GetAccountId(), account))
+            handler.PSendSysMessage("To keep your per-character addon settings, close the game and copy the folder "
+                "WTF\\Account\\{}\\{}\\{} to {} in the same place.", account, realm.Name, oldName, fullName);
 
         // Large yellow text mid-screen, since the chat line is easy to miss and there is no logout countdown.
         handler.SendNotification("Your family name has been recorded. Returning to character select...");

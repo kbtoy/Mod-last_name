@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
 """
-mod-last_name: build the client DBC files for the Hall of Records.
+mod-last_name: build the generated parts of the client patch.
 
 Appends the module's rows to copies of Item.dbc, Achievement.dbc, Achievement_Criteria.dbc and
-GameObjectDisplayInfo.dbc and writes them to client/DBFilesClient/. Pack the whole client/ folder into a patch MPQ:
-DBFilesClient\\*.dbc plus the registry model under World\\.
+GameObjectDisplayInfo.dbc and writes them to client/DBFilesClient/. With --toc it also writes
+client/Interface/FrameXML/FrameXML.toc: your FrameXML.toc with LastName.lua added at the end. Pack the whole client/
+folder into a patch MPQ: DBFilesClient\\*.dbc, Interface\\FrameXML\\ and the registry model under World\\.
 
 The rows mirror data/sql/db-world/last_name_hall_of_records.sql; change both together.
 
 Usage:
-    python tools/make_client_dbc.py <source folder> [source folder ...]
+    python tools/make_client_patch.py [--toc FrameXML.toc] <source folder> [source folder ...]
 
 The source is your server's dbc folder (the DataDir dbc folder, e.g. <AzerothCore>/Data/dbc). Each DBC is read from the
 first source folder that has it, so list your custom patch folder before the stock DBC folder:
 
-    python tools/make_client_dbc.py "C:/MyPatch/DBFilesClient" <AzerothCore>/Data/dbc
+    python tools/make_client_patch.py "C:/MyPatch/DBFilesClient" <AzerothCore>/Data/dbc
+
+--toc is the FrameXML.toc the client loads today: the one in your UI patch if you have one, else the stock file
+extracted from the client (Interface\\FrameXML\\FrameXML.toc in patch-enUS-3.MPQ). Without it, add LastName.lua to the
+end of your FrameXML.toc yourself.
 
 Rows with the module's IDs are replaced if they already exist, so running the script again on its own output is safe.
 """
 
+import argparse
 import struct
-import sys
 from pathlib import Path
 
 LOCALE_MASK = 0xFF01FE  # same value Blizzard rows use for filled enUS strings
@@ -69,8 +74,25 @@ GAMEOBJECT_DISPLAYS = [
 ]
 
 
+FRAMEXML_FILES = ["LastName.lua"]
+
+
 def float_bits(value):
     return struct.unpack("<I", struct.pack("<f", value))[0]
+
+
+def write_toc(source, target):
+    """Copy a FrameXML.toc with the module's files listed at the end (once), keeping its line endings."""
+    text = source.read_bytes().decode("latin-1")
+    newline = "\r\n" if "\r\n" in text else "\n"
+    listed = {line.strip().lower() for line in text.splitlines()}
+    missing = [name for name in FRAMEXML_FILES if name.lower() not in listed]
+    if missing:
+        if not text.endswith(newline):
+            text += newline
+        text += newline + "# Family names (mod-last_name)" + newline + newline.join(missing) + newline
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(text.encode("latin-1"))
 
 
 class Dbc:
@@ -116,10 +138,13 @@ def find_source(sources, name):
 
 
 def main():
-    if len(sys.argv) < 2:
-        raise SystemExit(__doc__)
-    sources = [Path(arg) for arg in sys.argv[1:]]
-    target = Path(__file__).resolve().parent.parent / "client" / "DBFilesClient"
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--toc", type=Path, help="the FrameXML.toc your client loads today")
+    parser.add_argument("sources", type=Path, nargs="+", help="folders to read the DBCs from, first match wins")
+    args = parser.parse_args()
+    sources = args.sources
+    client = Path(__file__).resolve().parent.parent / "client"
+    target = client / "DBFilesClient"
     target.mkdir(parents=True, exist_ok=True)
 
     items = Dbc(find_source(sources, "Item.dbc"))
@@ -152,6 +177,13 @@ def main():
     displays.write(target / "GameObjectDisplayInfo.dbc")
 
     print(f"Wrote Item.dbc, Achievement.dbc, Achievement_Criteria.dbc and GameObjectDisplayInfo.dbc to {target}")
+
+    if args.toc:
+        toc = client / "Interface" / "FrameXML" / "FrameXML.toc"
+        write_toc(args.toc, toc)
+        print(f"Wrote {toc} ({args.toc} plus {', '.join(FRAMEXML_FILES)})")
+    else:
+        print(f"No --toc given: add {', '.join(FRAMEXML_FILES)} to the end of your FrameXML.toc")
 
 
 if __name__ == "__main__":

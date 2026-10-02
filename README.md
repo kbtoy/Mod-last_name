@@ -1,8 +1,9 @@
 # mod-last_name: Family Names for AzerothCore (3.3.5a)
 
 Characters are created with a single name as usual. After reaching level 20 they can **earn a family name** through
-the Hall of Records, turning `John` into `John Doe`. No `Wow.exe` patch is needed. The client patch only carries DBC
-data for the new items and achievements, and the book wheel model used by the registry.
+the Hall of Records, turning `John` into `John Doe`. No `Wow.exe` patch is needed. The client patch carries DBC data
+for the new items and achievements, the book wheel model used by the registry, and one FrameXML file so typed
+commands such as `/w John Doe` and `/friend John Doe` take the full name.
 
 ## How players earn a family name
 
@@ -69,17 +70,23 @@ In game, stand where each ledger should go and run:
 ### 4. Client patch
 
 ```bash
-python tools/make_client_dbc.py <AzerothCore>/Data/dbc
+python tools/make_client_patch.py --toc <your FrameXML.toc> <AzerothCore>/Data/dbc
 ```
 
 Pass your server's dbc folder (under `DataDir` in `worldserver.conf`). This writes `Item.dbc`, `Achievement.dbc`,
-`Achievement_Criteria.dbc` and `GameObjectDisplayInfo.dbc` to `client/DBFilesClient/`. Pack the whole `client/` folder
-into a patch MPQ (for example `patch-T.MPQ`), keeping its paths: `DBFilesClient\` for the DBCs and
-`World\Expansion10\Doodads\Arathor\` for the registry's book wheel model. If one of your existing patch MPQs already
-ships a modified copy of one of these DBCs, point the script at that copy instead so your other changes are kept.
+`Achievement_Criteria.dbc` and `GameObjectDisplayInfo.dbc` to `client/DBFilesClient/`. If one of your existing patch
+MPQs already ships a modified copy of one of these DBCs, list its folder first so your other changes are kept.
+
+`--toc` is the `Interface\FrameXML\FrameXML.toc` your client loads today: the one in your UI patch if you have one,
+otherwise the stock file extracted from `patch-enUS-3.MPQ`. The script writes it to `client/Interface/FrameXML/` with
+`LastName.lua` added at the end. Without `--toc`, add that line to your FrameXML.toc yourself.
+
+Pack the whole `client/` folder into a patch MPQ (for example `patch-T.MPQ`), keeping its paths: `DBFilesClient\` for
+the DBCs, `Interface\FrameXML\` for `LastName.lua` and the toc, and `World\Expansion10\Doodads\Arathor\` for the
+registry's book wheel model.
 
 Without the client patch the server side still works, but the items show as unknown, the achievement doesn't appear
-in the achievement window and the registry is invisible.
+in the achievement window, the registry is invisible, and typed commands only take the first word of a name.
 
 ## Configuration (`mod_last_name.conf`)
 
@@ -97,10 +104,35 @@ Single names are left entirely to the core. For a two-part name, each part must 
 (alphabet, no three identical letters in a row, reserved and profane names) and the minimum and maximum part length.
 Both parts must use the same alphabet, and the full name is also checked against the reserved and profanity lists.
 
+## Full names in the client
+
+The server sends full names everywhere it sends a name, so chat, the friends and ignore lists, the guild roster,
+`/who`, mail and unit frames all show `John Doe`. Names typed in or picked from the UI also work with the stock client:
+chat links, right-click menus, `/r`, `/invite`, `/ignore`, guild and team commands, and the Add Friend and Add Ignore
+dialogs. `/who n-"John Doe"` finds one player; `/who John Doe` matches either word, like any other `/who` search.
+
+The FrameXML file in the client patch (`LastName.lua`) covers the rest:
+
+- **Whispers:** the stock chat box keeps a two-word target only when it's on the autocomplete list (friends, guild,
+  group, recent contacts), and otherwise whispers the first word. `LastName.lua` also counts every two-part name seen
+  this session in chat, `/who`, your target and your mouseover. For anyone else, type `/w "John Doe" hi` or
+  `/w John_Doe hi`. To whisper a single-name `John` a message starting with a known surname, quote it: `/w "John" Doe...`.
+- **`/friend John Doe`:** resolved the same way (the stock command adds `John` with the note `Doe`).
+- **Name boxes:** the mail "To:" box and the guild, raid, arena team and mute dialogs take up to 25 letters instead
+  of 12.
+
+## Addon settings after a rename
+
+The client stores addon settings by character name, so `John Doe` starts out without `John`'s.
+
+- **Account-wide settings keyed by character** (every addon using AceDB): at login, `LastName.lua` moves entries saved
+  under `John - <realm>` to `John Doe - <realm>` and offers a UI reload so the addons pick them up. This happens once.
+- **Per-character saved variables, enabled addons and layout** live in `WTF\Account\<ACCOUNT>\<Realm>\John`, a folder
+  the game can't rename. The registry tells the player to close the game and copy it to `John Doe` in the same place.
+  Keybindings, macros and chat settings are stored on the server by character and come back on their own.
+
 ## Known limitations
 
-- **Typed whispers:** `/w John Doe hi` whispers "John", because the 3.3.5 chat box only takes the first word as the
-  target. Clicking the name in chat, the friends list, mail, invites and guild commands work with the full name.
 - **GM commands:** typed player names are split at the space. Use a shift-clicked player link, a GUID or a target.
 - **Paid services:** race change, faction change and appearance change resend the name from the client, and the
   unpatched client rejects names with a space. Not yet tested.
