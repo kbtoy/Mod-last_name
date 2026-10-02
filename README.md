@@ -25,7 +25,8 @@ data for the new items and achievements, and the book wheel model used by the re
 5. On success the supplies and writ are taken and the character is renamed. A chat message and a center-screen
    notice announce the change, and a few seconds later the player returns to the character screen.
 
-A lost writ can be replaced at the registry. Each character can register a family name once.
+A lost writ can be replaced at the registry. Each character can register a family name once. Writs are only mailed to
+characters played from a client, so bots such as those of mod-playerbots don't receive them.
 
 ## Installation
 

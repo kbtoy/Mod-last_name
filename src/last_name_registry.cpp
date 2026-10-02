@@ -124,8 +124,13 @@ namespace
         WritTracker::instance()->MarkSent(player->GetGUID().GetCounter());
     }
 
+    // Only characters played from a client get the writ. Bot sessions (mod-playerbots) have no socket and would
+    // otherwise each be mailed one; a bot character gets its writ if a player ever logs in to it.
     void TrySendWrit(Player* player)
     {
+        if (player->GetSession()->IsSocketClosed())
+            return;
+
         if (IsEligibleForWrit(player) && !WritTracker::instance()->WasSent(player->GetGUID().GetCounter()))
             MailWrit(player);
     }
