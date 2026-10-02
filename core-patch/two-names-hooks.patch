@@ -1,0 +1,108 @@
+diff --git a/src/server/game/Globals/ObjectMgr.cpp b/src/server/game/Globals/ObjectMgr.cpp
+index 5fa86d4b5..271fab0df 100644
+--- a/src/server/game/Globals/ObjectMgr.cpp
++++ b/src/server/game/Globals/ObjectMgr.cpp
+@@ -208,6 +208,10 @@ std::string ScriptInfo::GetDebugInfo() const
+ 
+ bool normalizePlayerName(std::string& name)
+ {
++    bool scriptResult = false;
++    if (sScriptMgr->OnNormalizePlayerName(name, scriptResult))
++        return scriptResult;
++
+     if (name.empty())
+         return false;
+ 
+@@ -9279,6 +9283,10 @@ bool isValidString(std::wstring wstr, uint32 strictMask, bool numericOrSpace, bo
+ 
+ uint8 ObjectMgr::CheckPlayerName(std::string_view name, bool create)
+ {
++    uint8 scriptResult = CHAR_NAME_SUCCESS;
++    if (sScriptMgr->OnCheckPlayerName(name, create, scriptResult))
++        return scriptResult;
++
+     std::wstring wname;
+ 
+     // Check for invalid characters
+diff --git a/src/server/game/Scripting/ScriptDefines/MiscScript.cpp b/src/server/game/Scripting/ScriptDefines/MiscScript.cpp
+index a41a3f0d9..c0a0440f9 100644
+--- a/src/server/game/Scripting/ScriptDefines/MiscScript.cpp
++++ b/src/server/game/Scripting/ScriptDefines/MiscScript.cpp
+@@ -109,6 +109,16 @@ void ScriptMgr::GetDialogStatus(Player* player, Object* questgiver)
+     CALL_ENABLED_HOOKS(MiscScript, MISCHOOK_GET_DIALOG_STATUS, script->GetDialogStatus(player, questgiver));
+ }
+ 
++bool ScriptMgr::OnNormalizePlayerName(std::string& name, bool& result)
++{
++    CALL_ENABLED_BOOLEAN_HOOKS_WITH_DEFAULT_FALSE(MiscScript, MISCHOOK_ON_NORMALIZE_PLAYER_NAME, script->OnNormalizePlayerName(name, result));
++}
++
++bool ScriptMgr::OnCheckPlayerName(std::string_view name, bool create, uint8& result)
++{
++    CALL_ENABLED_BOOLEAN_HOOKS_WITH_DEFAULT_FALSE(MiscScript, MISCHOOK_ON_CHECK_PLAYER_NAME, script->OnCheckPlayerName(name, create, result));
++}
++
+ MiscScript::MiscScript(char const* name, std::vector<uint16> enabledHooks)
+     : ScriptObject(name, MISCHOOK_END)
+ {
+diff --git a/src/server/game/Scripting/ScriptDefines/MiscScript.h b/src/server/game/Scripting/ScriptDefines/MiscScript.h
+index 9ed20ab23..5e8db6a15 100644
+--- a/src/server/game/Scripting/ScriptDefines/MiscScript.h
++++ b/src/server/game/Scripting/ScriptDefines/MiscScript.h
+@@ -20,6 +20,8 @@
+ 
+ #include "ObjectGuid.h"
+ #include "ScriptObject.h"
++#include <string>
++#include <string_view>
+ #include <vector>
+ 
+ enum MiscHook
+@@ -42,6 +44,8 @@ enum MiscHook
+     MISCHOOK_ON_PLAYER_SET_PHASE,
+     MISCHOOK_ON_INSTANCE_SAVE,
+     MISCHOOK_GET_DIALOG_STATUS,
++    MISCHOOK_ON_NORMALIZE_PLAYER_NAME,
++    MISCHOOK_ON_CHECK_PLAYER_NAME,
+     MISCHOOK_END
+ };
+ 
+@@ -94,6 +98,25 @@ public:
+      * @param questgiver Contains information about the Object
+      */
+     virtual void GetDialogStatus(Player* /*player*/, Object* /*questgiver*/) { }
++
++    /**
++     * @brief This hook is called before the core normalizes a player name (normalizePlayerName)
++     *
++     * @param name The name to normalize, modified in place
++     * @param result Set to whether the name is valid when the hook handles it
++     * @return True to override the core normalization with result, false to fall through to it
++     */
++    [[nodiscard]] virtual bool OnNormalizePlayerName(std::string& /*name*/, bool& /*result*/) { return false; }
++
++    /**
++     * @brief This hook is called before the core validates a player name (ObjectMgr::CheckPlayerName)
++     *
++     * @param name The already normalized name
++     * @param create True when the name is being created or changed, false when loading an existing character
++     * @param result Set to a ResponseCodes CHAR_NAME_* value when the hook handles it
++     * @return True to override the core validation with result, false to fall through to it
++     */
++    [[nodiscard]] virtual bool OnCheckPlayerName(std::string_view /*name*/, bool /*create*/, uint8& /*result*/) { return false; }
+ };
+ 
+ #endif
+diff --git a/src/server/game/Scripting/ScriptMgr.h b/src/server/game/Scripting/ScriptMgr.h
+index 72a8e103d..e47a42b8e 100644
+--- a/src/server/game/Scripting/ScriptMgr.h
++++ b/src/server/game/Scripting/ScriptMgr.h
+@@ -724,6 +724,8 @@ public: /* MiscScript */
+     void OnAfterLootTemplateProcess(Loot* loot, LootTemplate const* tab, LootStore const& store, Player* lootOwner, bool personal, bool noEmptyError, uint16 lootMode);
+     void OnInstanceSave(InstanceSave* instanceSave);
+     void GetDialogStatus(Player* player, Object* questgiver);
++    bool OnNormalizePlayerName(std::string& name, bool& result);
++    bool OnCheckPlayerName(std::string_view name, bool create, uint8& result);
+ 
+ public: /* CommandSC */
+ 

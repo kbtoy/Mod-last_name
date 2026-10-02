@@ -4,8 +4,10 @@
  */
 
 void AddTwoNamesScripts();
+void AddTwoNamesRegistryScripts();
 
 void Addmod_two_namesScripts()
 {
     AddTwoNamesScripts();
+    AddTwoNamesRegistryScripts();
 }

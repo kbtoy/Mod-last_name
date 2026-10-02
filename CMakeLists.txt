@@ -8,6 +8,7 @@ add_library(mod-two-names INTERFACE)
 target_sources(mod-two-names INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mod_two_names.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/two_names_loader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/two_names_registry.cpp
 )
 
 target_include_directories(mod-two-names INTERFACE
