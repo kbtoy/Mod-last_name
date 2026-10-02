@@ -1,5 +1,5 @@
 #
-# AzerothCore mod-two-names configuration
+# AzerothCore mod-last_name configuration
 #
 
 [worldserver]
@@ -13,46 +13,46 @@
 #    Names containing a space are always validated by this module, even with the registry disabled,
 #    so characters that already carry a family name keep it.
 #
-#    TwoNames.MinPartLength
+#    LastName.MinPartLength
 #        Description: Minimum number of letters in a family name.
 #        Default:     2
 #
 
-TwoNames.MinPartLength = 2
+LastName.MinPartLength = 2
 
 #
-#    TwoNames.MaxPartLength
+#    LastName.MaxPartLength
 #        Description: Maximum number of letters in a family name (and in the first name of a
 #                     two-part name). Values above 12 are capped at 12, the client's name limit.
 #        Default:     12
 #
 
-TwoNames.MaxPartLength = 12
+LastName.MaxPartLength = 12
 
 #
-#    TwoNames.Registry.Enable
+#    LastName.Registry.Enable
 #        Description: Enable the Hall of Records: the writ mail, the quest supplies and the registry
 #                     ledgers in Orgrimmar and Stormwind.
 #        Default:     1 (Enabled)
 #                     0 (Disabled)
 #
 
-TwoNames.Registry.Enable = 1
+LastName.Registry.Enable = 1
 
 #
-#    TwoNames.Registry.WritLevel
+#    LastName.Registry.WritLevel
 #        Description: Level at which the Writ of Lineage is mailed. Keep it equal to the MinLevel of
 #                     quests 911101 and 911102 in the world database.
 #        Default:     20
 #
 
-TwoNames.Registry.WritLevel = 20
+LastName.Registry.WritLevel = 20
 
 #
-#    TwoNames.Registry.LogoutDelay
+#    LastName.Registry.LogoutDelay
 #        Description: Seconds between inscribing a family name and returning to the character screen,
 #                     where the new name takes effect for everyone. Maximum 20.
 #        Default:     5
 #
 
-TwoNames.Registry.LogoutDelay = 5
+LastName.Registry.LogoutDelay = 5

@@ -3,11 +3,11 @@
  * Author: AlsoNotMehh
  */
 
-void AddTwoNamesScripts();
-void AddTwoNamesRegistryScripts();
+void AddLastNameScripts();
+void AddLastNameRegistryScripts();
 
-void Addmod_two_namesScripts()
+void Addmod_last_nameScripts()
 {
-    AddTwoNamesScripts();
-    AddTwoNamesRegistryScripts();
+    AddLastNameScripts();
+    AddLastNameRegistryScripts();
 }

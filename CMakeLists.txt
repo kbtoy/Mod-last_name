@@ -1,20 +1,20 @@
-# AzerothCore module: mod-two-names
+# AzerothCore module: mod-last_name
 cmake_minimum_required(VERSION 3.16)
 
-set(MOD_TWO_NAMES_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(MOD_LAST_NAME_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(mod-two-names INTERFACE)
+add_library(mod-last_name INTERFACE)
 
-target_sources(mod-two-names INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/mod_two_names.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/two_names_loader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/two_names_registry.cpp
+target_sources(mod-last_name INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/mod_last_name.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/last_name_loader.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/last_name_registry.cpp
 )
 
-target_include_directories(mod-two-names INTERFACE
+target_include_directories(mod-last_name INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-target_link_libraries(mod-two-names INTERFACE
+target_link_libraries(mod-last_name INTERFACE
     game
 )

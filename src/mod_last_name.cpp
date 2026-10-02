@@ -3,7 +3,7 @@
  * Author: AlsoNotMehh
  */
 
-#include "TwoNames.h"
+#include "LastName.h"
 #include "Config.h"
 #include "MiscScript.h"
 #include "ObjectMgr.h"
@@ -14,19 +14,19 @@
 #include <string>
 #include <string_view>
 
-TwoNamesConfig* TwoNamesConfig::instance()
+LastNameConfig* LastNameConfig::instance()
 {
-    static TwoNamesConfig instance;
+    static LastNameConfig instance;
     return &instance;
 }
 
-void TwoNamesConfig::LoadConfig()
+void LastNameConfig::LoadConfig()
 {
-    _minPartLength = sConfigMgr->GetOption<uint32>("TwoNames.MinPartLength", 2);
-    _maxPartLength = std::min<uint32>(sConfigMgr->GetOption<uint32>("TwoNames.MaxPartLength", 12), MAX_PLAYER_NAME);
-    _registryEnabled = sConfigMgr->GetOption<bool>("TwoNames.Registry.Enable", true);
-    _writLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("TwoNames.Registry.WritLevel", 20));
-    _logoutDelay = std::min<uint32>(sConfigMgr->GetOption<uint32>("TwoNames.Registry.LogoutDelay", 5), 20);
+    _minPartLength = sConfigMgr->GetOption<uint32>("LastName.MinPartLength", 2);
+    _maxPartLength = std::min<uint32>(sConfigMgr->GetOption<uint32>("LastName.MaxPartLength", 12), MAX_PLAYER_NAME);
+    _registryEnabled = sConfigMgr->GetOption<bool>("LastName.Registry.Enable", true);
+    _writLevel = static_cast<uint8>(sConfigMgr->GetOption<uint32>("LastName.Registry.WritLevel", 20));
+    _logoutDelay = std::min<uint32>(sConfigMgr->GetOption<uint32>("LastName.Registry.LogoutDelay", 5), 20);
 }
 
 namespace
@@ -62,10 +62,10 @@ namespace
             if (!Utf8toWStr(part, wpart))
                 return CHAR_NAME_INVALID_CHARACTER;
 
-            if (wpart.size() < sTwoNamesConfig->GetMinPartLength())
+            if (wpart.size() < sLastNameConfig->GetMinPartLength())
                 return CHAR_NAME_TOO_SHORT;
 
-            if (wpart.size() > sTwoNamesConfig->GetMaxPartLength())
+            if (wpart.size() > sLastNameConfig->GetMaxPartLength())
                 return CHAR_NAME_TOO_LONG;
 
             // Each part has no space, so this runs the unmodified core rules on it:
@@ -90,27 +90,27 @@ namespace
         return CHAR_NAME_SUCCESS;
     }
 
-    class TwoNamesWorldScript : public WorldScript
+    class LastNameWorldScript : public WorldScript
     {
     public:
-        TwoNamesWorldScript() : WorldScript("TwoNamesWorldScript", { WORLDHOOK_ON_AFTER_CONFIG_LOAD }) { }
+        LastNameWorldScript() : WorldScript("LastNameWorldScript", { WORLDHOOK_ON_AFTER_CONFIG_LOAD }) { }
 
         void OnAfterConfigLoad(bool /*reload*/) override
         {
-            sTwoNamesConfig->LoadConfig();
+            sLastNameConfig->LoadConfig();
         }
     };
 
     // Single names are left entirely to the core; these hooks only take over names containing a space.
     // They stay active regardless of config, otherwise characters with a surname would be forced to rename at login.
-    class TwoNamesMiscScript : public MiscScript
+    class LastNameMiscScript : public MiscScript
     {
     public:
-        TwoNamesMiscScript() : MiscScript("TwoNamesMiscScript", { MISCHOOK_ON_NORMALIZE_PLAYER_NAME, MISCHOOK_ON_CHECK_PLAYER_NAME }) { }
+        LastNameMiscScript() : MiscScript("LastNameMiscScript", { MISCHOOK_ON_NORMALIZE_PLAYER_NAME, MISCHOOK_ON_CHECK_PLAYER_NAME }) { }
 
         bool OnNormalizePlayerName(std::string& name, bool& result) override
         {
-            if (!TwoNames::HasSurname(name))
+            if (!LastName::HasSurname(name))
                 return false;
 
             // Typed targets such as "/w  john doe " can carry stray outer spaces.
@@ -122,7 +122,7 @@ namespace
             }
 
             name = name.substr(first, name.find_last_not_of(' ') - first + 1);
-            if (!TwoNames::HasSurname(name))
+            if (!LastName::HasSurname(name))
                 return false;
 
             std::size_t const space = name.find(' ');
@@ -152,8 +152,8 @@ namespace
     };
 }
 
-void AddTwoNamesScripts()
+void AddLastNameScripts()
 {
-    new TwoNamesWorldScript();
-    new TwoNamesMiscScript();
+    new LastNameWorldScript();
+    new LastNameMiscScript();
 }

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-mod-two-names: build the client DBC files for the Hall of Records.
+mod-last_name: build the client DBC files for the Hall of Records.
 
 Appends the module's rows to copies of Item.dbc, Achievement.dbc, Achievement_Criteria.dbc and
 GameObjectDisplayInfo.dbc and writes them to client/DBFilesClient/. Pack the whole client/ folder into a patch MPQ:
 DBFilesClient\\*.dbc plus the registry model under World\\.
 
-The rows mirror data/sql/db-world/two_names_hall_of_records.sql; change both together.
+The rows mirror data/sql/db-world/last_name_hall_of_records.sql; change both together.
 
 Usage:
     python tools/make_client_dbc.py <source folder> [source folder ...]

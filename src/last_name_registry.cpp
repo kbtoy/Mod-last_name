@@ -8,7 +8,7 @@
 // is active. The faction registry (Orgrimmar or Stormwind) takes the four supplies, inscribes the family
 // name and returns the player to the character screen so every client picks up the new name.
 
-#include "TwoNames.h"
+#include "LastName.h"
 #include "CharacterCache.h"
 #include "Chat.h"
 #include "DatabaseEnv.h"
@@ -54,7 +54,7 @@ namespace
             std::lock_guard<std::mutex> lock(_lock);
             _sent.clear();
 
-            if (QueryResult result = CharacterDatabase.Query("SELECT `guid` FROM `mod_two_names_writ`"))
+            if (QueryResult result = CharacterDatabase.Query("SELECT `guid` FROM `mod_last_name_writ`"))
             {
                 do
                 {
@@ -77,7 +77,7 @@ namespace
                     return;
             }
 
-            CharacterDatabase.Execute("INSERT IGNORE INTO `mod_two_names_writ` (`guid`) VALUES ({})", guid);
+            CharacterDatabase.Execute("INSERT IGNORE INTO `mod_last_name_writ` (`guid`) VALUES ({})", guid);
         }
 
     private:
@@ -89,11 +89,11 @@ namespace
     // (never received, or lost after accepting the quest) needs a new one to finish.
     bool IsEligibleForWrit(Player* player)
     {
-        return sTwoNamesConfig->IsRegistryEnabled()
-            && player->GetLevel() >= sTwoNamesConfig->GetWritLevel()
-            && !TwoNames::HasSurname(player->GetName())
-            && !player->GetQuestRewardStatus(TwoNames::GetQuestForTeam(player->GetTeamId()))
-            && !player->HasItemCount(TwoNames::GetWritForTeam(player->GetTeamId()), 1, true);
+        return sLastNameConfig->IsRegistryEnabled()
+            && player->GetLevel() >= sLastNameConfig->GetWritLevel()
+            && !LastName::HasSurname(player->GetName())
+            && !player->GetQuestRewardStatus(LastName::GetQuestForTeam(player->GetTeamId()))
+            && !player->HasItemCount(LastName::GetWritForTeam(player->GetTeamId()), 1, true);
     }
 
     void MailWrit(Player* player)
@@ -112,13 +112,13 @@ namespace
         CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
         MailDraft draft(subject, body);
 
-        if (Item* writ = Item::CreateItem(TwoNames::GetWritForTeam(player->GetTeamId()), 1, player))
+        if (Item* writ = Item::CreateItem(LastName::GetWritForTeam(player->GetTeamId()), 1, player))
         {
             writ->SaveToDB(trans);
             draft.AddItem(writ);
         }
 
-        draft.SendMailTo(trans, MailReceiver(player), MailSender(MAIL_CREATURE, TWO_NAMES_MAIL_SENDER));
+        draft.SendMailTo(trans, MailReceiver(player), MailSender(MAIL_CREATURE, LAST_NAME_MAIL_SENDER));
         CharacterDatabase.CommitTransaction(trans);
 
         WritTracker::instance()->MarkSent(player->GetGUID().GetCounter());
@@ -155,11 +155,11 @@ namespace
     void Inscribe(Player* player, GameObject* registry, std::string surname)
     {
         ChatHandler handler(player->GetSession());
-        uint32 const questId = TwoNames::GetQuestForTeam(player->GetTeamId());
+        uint32 const questId = LastName::GetQuestForTeam(player->GetTeamId());
         Quest const* quest = sObjectMgr->GetQuestTemplate(questId);
 
         // Checked again here: the menu can be left open while the player's state changes.
-        if (!quest || TwoNames::HasSurname(player->GetName()) || !player->CanRewardQuest(quest, false))
+        if (!quest || LastName::HasSurname(player->GetName()) || !player->CanRewardQuest(quest, false))
             return;
 
         std::size_t const first = surname.find_first_not_of(' ');
@@ -170,7 +170,7 @@ namespace
         }
 
         surname = surname.substr(first, surname.find_last_not_of(' ') - first + 1);
-        if (TwoNames::HasSurname(surname))
+        if (LastName::HasSurname(surname))
         {
             handler.SendSysMessage("Enter a single family name, without spaces.");
             return;
@@ -214,12 +214,12 @@ namespace
         std::string firstName = oldName;
         CharacterDatabase.EscapeString(firstName);
         CharacterDatabase.EscapeString(lastName);
-        CharacterDatabase.Execute("REPLACE INTO `mod_two_names_surname` (`guid`, `account`, `first_name`, `surname`) "
+        CharacterDatabase.Execute("REPLACE INTO `mod_last_name_surname` (`guid`, `account`, `first_name`, `surname`) "
             "VALUES ({}, {}, '{}', '{}')", player->GetGUID().GetCounter(), player->GetSession()->GetAccountId(), firstName, lastName);
 
-        LOG_INFO("module", "mod-two-names: {} ({}) inscribed a family name and is now {}", oldName, player->GetGUID().ToString(), fullName);
+        LOG_INFO("module", "mod-last_name: {} ({}) inscribed a family name and is now {}", oldName, player->GetGUID().ToString(), fullName);
 
-        uint32 const delay = sTwoNamesConfig->GetLogoutDelay();
+        uint32 const delay = sLastNameConfig->GetLogoutDelay();
         handler.PSendSysMessage("The Keeper of Records inscribes {} into the ledger. You will return to the character "
             "screen in {} seconds to take up your new name.", fullName, delay);
 
@@ -231,10 +231,10 @@ namespace
         player->GetSession()->SetLogoutStartTime(GameTime::GetGameTime().count() - 20 + delay);
     }
 
-    class TwoNamesRegistryWorldScript : public WorldScript
+    class LastNameRegistryWorldScript : public WorldScript
     {
     public:
-        TwoNamesRegistryWorldScript() : WorldScript("TwoNamesRegistryWorldScript", { WORLDHOOK_ON_STARTUP }) { }
+        LastNameRegistryWorldScript() : WorldScript("LastNameRegistryWorldScript", { WORLDHOOK_ON_STARTUP }) { }
 
         void OnStartup() override
         {
@@ -242,10 +242,10 @@ namespace
         }
     };
 
-    class TwoNamesRegistryPlayerScript : public PlayerScript
+    class LastNameRegistryPlayerScript : public PlayerScript
     {
     public:
-        TwoNamesRegistryPlayerScript() : PlayerScript("TwoNamesRegistryPlayerScript", { PLAYERHOOK_ON_LOGIN, PLAYERHOOK_ON_LEVEL_CHANGED }) { }
+        LastNameRegistryPlayerScript() : PlayerScript("LastNameRegistryPlayerScript", { PLAYERHOOK_ON_LOGIN, PLAYERHOOK_ON_LEVEL_CHANGED }) { }
 
         // Also covers characters that were already past the writ level when the module was installed.
         void OnPlayerLogin(Player* player) override
@@ -259,23 +259,23 @@ namespace
         }
     };
 
-    class go_two_names_registry : public GameObjectScript
+    class go_last_name_registry : public GameObjectScript
     {
     public:
-        go_two_names_registry() : GameObjectScript("go_two_names_registry") { }
+        go_last_name_registry() : GameObjectScript("go_last_name_registry") { }
 
         bool OnGossipHello(Player* player, GameObject* go) override
         {
             ClearGossipMenuFor(player);
             ChatHandler handler(player->GetSession());
 
-            if (!sTwoNamesConfig->IsRegistryEnabled())
+            if (!sLastNameConfig->IsRegistryEnabled())
             {
                 handler.SendSysMessage("The Hall of Records is closed.");
                 return true;
             }
 
-            bool const hordeRegistry = go->GetEntry() == TWO_NAMES_GO_REGISTRY_HORDE;
+            bool const hordeRegistry = go->GetEntry() == LAST_NAME_GO_REGISTRY_HORDE;
             if ((player->GetTeamId() == TEAM_HORDE) != hordeRegistry)
             {
                 handler.SendSysMessage(hordeRegistry ? "Only citizens of the Horde may sign this ledger."
@@ -283,16 +283,16 @@ namespace
                 return true;
             }
 
-            uint32 const questId = TwoNames::GetQuestForTeam(player->GetTeamId());
-            if (TwoNames::HasSurname(player->GetName()) || player->GetQuestRewardStatus(questId))
+            uint32 const questId = LastName::GetQuestForTeam(player->GetTeamId());
+            if (LastName::HasSurname(player->GetName()) || player->GetQuestRewardStatus(questId))
             {
                 handler.SendSysMessage("Your family name is already recorded in this ledger.");
                 return true;
             }
 
-            if (player->GetLevel() < sTwoNamesConfig->GetWritLevel())
+            if (player->GetLevel() < sLastNameConfig->GetWritLevel())
             {
-                handler.PSendSysMessage("Return to the Hall of Records once you have reached level {}.", uint32(sTwoNamesConfig->GetWritLevel()));
+                handler.PSendSysMessage("Return to the Hall of Records once you have reached level {}.", uint32(sLastNameConfig->GetWritLevel()));
                 return true;
             }
 
@@ -303,12 +303,12 @@ namespace
             if (quest && player->CanRewardQuest(quest, false))
             {
                 std::string const popup = Acore::StringFormat("Enter your family name, letters only, up to {}. You will be "
-                    "returned to the character screen to take up your new name.", sTwoNamesConfig->GetMaxPartLength());
+                    "returned to the character screen to take up your new name.", sLastNameConfig->GetMaxPartLength());
                 AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "Inscribe my family name in the ledger.", GOSSIP_SENDER_MAIN,
                     ACTION_INSCRIBE, popup, 0, true);
             }
 
-            SendGossipMenuFor(player, TWO_NAMES_TEXT_REGISTRY, go->GetGUID());
+            SendGossipMenuFor(player, LAST_NAME_TEXT_REGISTRY, go->GetGUID());
             return true;
         }
 
@@ -317,7 +317,7 @@ namespace
             CloseGossipMenuFor(player);
 
             if (action == ACTION_REQUEST_WRIT && IsEligibleForWrit(player)
-                && player->AddItem(TwoNames::GetWritForTeam(player->GetTeamId()), 1))
+                && player->AddItem(LastName::GetWritForTeam(player->GetTeamId()), 1))
                 WritTracker::instance()->MarkSent(player->GetGUID().GetCounter());
 
             return true;
@@ -327,7 +327,7 @@ namespace
         {
             CloseGossipMenuFor(player);
 
-            if (action == ACTION_INSCRIBE && sTwoNamesConfig->IsRegistryEnabled())
+            if (action == ACTION_INSCRIBE && sLastNameConfig->IsRegistryEnabled())
                 Inscribe(player, go, code);
 
             return true;
@@ -335,9 +335,9 @@ namespace
     };
 }
 
-void AddTwoNamesRegistryScripts()
+void AddLastNameRegistryScripts()
 {
-    new TwoNamesRegistryWorldScript();
-    new TwoNamesRegistryPlayerScript();
-    new go_two_names_registry();
+    new LastNameRegistryWorldScript();
+    new LastNameRegistryPlayerScript();
+    new go_last_name_registry();
 }

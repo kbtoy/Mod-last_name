@@ -3,34 +3,34 @@
  * Author: AlsoNotMehh
  */
 
-#ifndef MOD_TWO_NAMES_H
-#define MOD_TWO_NAMES_H
+#ifndef MOD_LAST_NAME_H
+#define MOD_LAST_NAME_H
 
 #include "Define.h"
 #include "SharedDefines.h"
 #include <string>
 
 // IDs used by the world SQL in data/sql/db-world and by the client DBC patch.
-enum TwoNamesData : uint32
+enum LastNameData : uint32
 {
-    TWO_NAMES_MAIL_SENDER       = 911101, // creature_template, only used as the mail sender name
+    LAST_NAME_MAIL_SENDER       = 911101, // creature_template, only used as the mail sender name
 
-    TWO_NAMES_QUEST_HORDE       = 911101,
-    TWO_NAMES_QUEST_ALLIANCE    = 911102,
+    LAST_NAME_QUEST_HORDE       = 911101,
+    LAST_NAME_QUEST_ALLIANCE    = 911102,
 
-    TWO_NAMES_ITEM_WRIT_HORDE   = 911101,
-    TWO_NAMES_ITEM_WRIT_ALLIANCE = 911102,
+    LAST_NAME_ITEM_WRIT_HORDE   = 911101,
+    LAST_NAME_ITEM_WRIT_ALLIANCE = 911102,
 
-    TWO_NAMES_GO_REGISTRY_HORDE    = 911101, // Orgrimmar
-    TWO_NAMES_GO_REGISTRY_ALLIANCE = 911102, // Stormwind
+    LAST_NAME_GO_REGISTRY_HORDE    = 911101, // Orgrimmar
+    LAST_NAME_GO_REGISTRY_ALLIANCE = 911102, // Stormwind
 
-    TWO_NAMES_TEXT_REGISTRY     = 911101, // npc_text
+    LAST_NAME_TEXT_REGISTRY     = 911101, // npc_text
 };
 
-class TwoNamesConfig
+class LastNameConfig
 {
 public:
-    static TwoNamesConfig* instance();
+    static LastNameConfig* instance();
 
     void LoadConfig();
 
@@ -48,21 +48,21 @@ private:
     uint32 _logoutDelay = 5;
 };
 
-#define sTwoNamesConfig TwoNamesConfig::instance()
+#define sLastNameConfig LastNameConfig::instance()
 
-namespace TwoNames
+namespace LastName
 {
     // True when the name has a first and a last part.
     [[nodiscard]] inline bool HasSurname(std::string const& name) { return name.find(' ') != std::string::npos; }
 
     [[nodiscard]] inline uint32 GetQuestForTeam(TeamId team)
     {
-        return team == TEAM_HORDE ? TWO_NAMES_QUEST_HORDE : TWO_NAMES_QUEST_ALLIANCE;
+        return team == TEAM_HORDE ? LAST_NAME_QUEST_HORDE : LAST_NAME_QUEST_ALLIANCE;
     }
 
     [[nodiscard]] inline uint32 GetWritForTeam(TeamId team)
     {
-        return team == TEAM_HORDE ? TWO_NAMES_ITEM_WRIT_HORDE : TWO_NAMES_ITEM_WRIT_ALLIANCE;
+        return team == TEAM_HORDE ? LAST_NAME_ITEM_WRIT_HORDE : LAST_NAME_ITEM_WRIT_ALLIANCE;
     }
 }
 

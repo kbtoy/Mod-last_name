@@ -1,8 +1,8 @@
-# mod-two-names: Family Names for AzerothCore (3.3.5a)
+# mod-last_name: Family Names for AzerothCore (3.3.5a)
 
 Characters are created with a single name as usual. After reaching level 20 they can **earn a family name** through
 the Hall of Records, turning `John` into `John Doe`. No `Wow.exe` patch is needed. The client patch only carries DBC
-data for the new items and achievements.
+data for the new items and achievements, and the book wheel model used by the registry.
 
 ## How players earn a family name
 
@@ -35,7 +35,7 @@ The module needs two script hooks the core doesn't have yet: `MiscScript::OnNorm
 `MiscScript::OnCheckPlayerName`. Apply the patch from the AzerothCore root, then rebuild:
 
 ```bash
-git apply modules/mod-two-names/core-patch/two-names-hooks.patch
+git apply modules/mod-last_name/core-patch/last-name-hooks.patch
 ```
 
 Both hooks are also required at login: the core validates every character name when it loads, and would otherwise
@@ -43,8 +43,15 @@ force a rename on anyone with a family name.
 
 ### 2. Server module
 
-1. Place the module in `modules/`, re-run CMake and build.
-2. Copy `conf/mod_two_names.conf.dist` to your worldserver config folder as `mod_two_names.conf`.
+1. Clone the module into `modules/`, then re-run CMake and build. Keep the folder name `mod-last_name`: AzerothCore
+   derives the module's script loader from it.
+
+   ```bash
+   cd modules
+   git clone https://github.com/kbt0y5/mod-last_name.git
+   ```
+
+2. Copy `conf/mod_last_name.conf.dist` to your worldserver config folder as `mod_last_name.conf`.
 3. The SQL in `data/sql/db-world` and `data/sql/db-characters` is applied automatically by the database updater. The
    characters SQL widens `characters.name` to 25 characters.
 4. The module uses ID 911101-911110 (items), 911101-911102 (quests, gameobjects), 911101 (creature, npc_text),
@@ -64,24 +71,24 @@ In game, stand where each ledger should go and run:
 python tools/make_client_dbc.py <AzerothCore>/Data/dbc
 ```
 
-Pass your server's dbc folder (under `DataDir` in `worldserver.conf`). This writes `Item.dbc`, `Achievement.dbc`, `Achievement_Criteria.dbc` and `GameObjectDisplayInfo.dbc` to
-`client/DBFilesClient/`. Pack the whole `client/` folder into a patch MPQ (for example `patch-T.MPQ`), keeping its
-paths: `DBFilesClient\` for the DBCs and `World\Expansion10\Doodads\Arathor\` for the registry's book wheel model. If one
-of your existing patch MPQs already ships a modified copy of one of these DBCs, point the script at that copy instead
-so your other changes are kept.
+Pass your server's dbc folder (under `DataDir` in `worldserver.conf`). This writes `Item.dbc`, `Achievement.dbc`,
+`Achievement_Criteria.dbc` and `GameObjectDisplayInfo.dbc` to `client/DBFilesClient/`. Pack the whole `client/` folder
+into a patch MPQ (for example `patch-T.MPQ`), keeping its paths: `DBFilesClient\` for the DBCs and
+`World\Expansion10\Doodads\Arathor\` for the registry's book wheel model. If one of your existing patch MPQs already
+ships a modified copy of one of these DBCs, point the script at that copy instead so your other changes are kept.
 
 Without the client patch the server side still works, but the items show as unknown, the achievement doesn't appear
 in the achievement window and the registry is invisible.
 
-## Configuration (`mod_two_names.conf`)
+## Configuration (`mod_last_name.conf`)
 
 | Setting | Default | Description |
 | :--- | :---: | :--- |
-| `TwoNames.MinPartLength` | `2` | Minimum letters in a family name. |
-| `TwoNames.MaxPartLength` | `12` | Maximum letters in a family name, capped at 12. |
-| `TwoNames.Registry.Enable` | `1` | Writ mail, supplies and registries. Existing family names stay valid when disabled. |
-| `TwoNames.Registry.WritLevel` | `20` | Level the writ is mailed at. Keep equal to the quests' `MinLevel`. |
-| `TwoNames.Registry.LogoutDelay` | `5` | Seconds from inscribing to returning to the character screen (max 20). |
+| `LastName.MinPartLength` | `2` | Minimum letters in a family name. |
+| `LastName.MaxPartLength` | `12` | Maximum letters in a family name, capped at 12. |
+| `LastName.Registry.Enable` | `1` | Writ mail, supplies and registries. Existing family names stay valid when disabled. |
+| `LastName.Registry.WritLevel` | `20` | Level the writ is mailed at. Keep equal to the quests' `MinLevel`. |
+| `LastName.Registry.LogoutDelay` | `5` | Seconds from inscribing to returning to the character screen (max 20). |
 
 ## Name rules
 
@@ -101,8 +108,9 @@ Both parts must use the same alphabet, and the full name is also checked against
 
 ## Credits
 
-- Original module: [AlsoNotMehh](https://github.com/AlsoNotMehh)
+- Based on [mod-two-names](https://github.com/AlsoNotMehh/mod-two-names) by [AlsoNotMehh](https://github.com/AlsoNotMehh)
 - Framework: [AzerothCore](https://www.azerothcore.org)
+- Registry model: `11AT_Arathor_BookWheel01` from World of Warcraft, © Blizzard Entertainment
 
 ## License
 

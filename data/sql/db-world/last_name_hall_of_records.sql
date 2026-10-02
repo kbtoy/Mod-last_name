@@ -1,7 +1,7 @@
--- mod-two-names: Hall of Records
+-- mod-last_name: Hall of Records
 -- Writ of Lineage (mailed at level 20) starts the faction quest. Each capital innkeeper sells one supply while
 -- the quest is active. The registry ledger in Orgrimmar or Stormwind inscribes the family name (script).
--- Every ID here must match TwoNames.h and the client DBC patch in client/DBFilesClient.
+-- Every ID here must match LastName.h and the client DBC patch in client/DBFilesClient.
 
 SET @MAIL_SENDER    := 911101;
 SET @QUEST_HORDE    := 911101;
@@ -57,14 +57,14 @@ INSERT INTO `npc_vendor` (`entry`, `slot`, `item`, `maxcount`, `incrtime`, `Exte
 -- 23 = CONDITION_SOURCE_TYPE_NPC_VENDOR, 9 = CONDITION_QUESTTAKEN
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 23 AND `SourceEntry` BETWEEN 911103 AND 911110;
 INSERT INTO `conditions` (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`) VALUES
-(23, 6741, 911103, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-two-names: Forsaken Iron-Gall Ink only while A Name Worth Keeping is active'),
-(23, 16618, 911104, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-two-names: Silvermoon Scribe''s Quill only while A Name Worth Keeping is active'),
-(23, 6746, 911105, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-two-names: Mulgore Vellum only while A Name Worth Keeping is active'),
-(23, 6929, 911106, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-two-names: Warchief''s Official Seal only while A Name Worth Keeping is active'),
-(23, 5111, 911107, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-two-names: Ironforge Forge-Black Ink only while A Name Worth Keeping is active'),
-(23, 6735, 911108, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-two-names: Darnassian Owl-Feather Quill only while A Name Worth Keeping is active'),
-(23, 16739, 911109, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-two-names: Exodar Crystal Vellum only while A Name Worth Keeping is active'),
-(23, 6740, 911110, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-two-names: King''s Official Seal only while A Name Worth Keeping is active');
+(23, 6741, 911103, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-last_name: Forsaken Iron-Gall Ink only while A Name Worth Keeping is active'),
+(23, 16618, 911104, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-last_name: Silvermoon Scribe''s Quill only while A Name Worth Keeping is active'),
+(23, 6746, 911105, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-last_name: Mulgore Vellum only while A Name Worth Keeping is active'),
+(23, 6929, 911106, 0, 0, 9, 0, @QUEST_HORDE, 0, 0, 0, 0, 0, '', 'mod-last_name: Warchief''s Official Seal only while A Name Worth Keeping is active'),
+(23, 5111, 911107, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-last_name: Ironforge Forge-Black Ink only while A Name Worth Keeping is active'),
+(23, 6735, 911108, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-last_name: Darnassian Owl-Feather Quill only while A Name Worth Keeping is active'),
+(23, 16739, 911109, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-last_name: Exodar Crystal Vellum only while A Name Worth Keeping is active'),
+(23, 6740, 911110, 0, 0, 9, 0, @QUEST_ALLIANCE, 0, 0, 0, 0, 0, '', 'mod-last_name: King''s Official Seal only while A Name Worth Keeping is active');
 
 -- Quests. No quest ender: the registry script completes them after the family name passes validation.
 -- AllowableRaces 690 = Horde races, 1101 = Alliance races. QuestSortID = Orgrimmar / Stormwind City.
@@ -90,8 +90,8 @@ INSERT INTO `gameobjectdisplayinfo_dbc` (`ID`, `ModelName`, `GeoBoxMinX`, `GeoBo
 -- Registry ledgers (type 2 = questgiver). Spawn in-game with .gobject add.
 DELETE FROM `gameobject_template` WHERE `entry` IN (@GO_HORDE, @GO_ALLIANCE);
 INSERT INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `size`, `ScriptName`) VALUES
-(@GO_HORDE, 2, @GO_DISPLAY, 'Hall of Records Registry', 1, 'go_two_names_registry'),
-(@GO_ALLIANCE, 2, @GO_DISPLAY, 'Hall of Records Registry', 1, 'go_two_names_registry');
+(@GO_HORDE, 2, @GO_DISPLAY, 'Hall of Records Registry', 1, 'go_last_name_registry'),
+(@GO_ALLIANCE, 2, @GO_DISPLAY, 'Hall of Records Registry', 1, 'go_last_name_registry');
 
 DELETE FROM `npc_text` WHERE `ID` = @TEXT;
 INSERT INTO `npc_text` (`ID`, `text0_0`, `text0_1`, `Probability0`) VALUES
